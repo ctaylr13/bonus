@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
+import axios from "axios";
+import api from "./api/client";
 import Scoreboard from "./scoreboard/Scoreboard";
 import type { Game, ScheduleResponse } from "./scoreboard/types";
 
-// Straight at the hosted API — no proxy, no axios. Works only if the API
-// sends CORS headers. If it doesn't, switch to App.axios.tsx (proxied).
-const ENDPOINT = "https://statsapi.mlb.com/api/v1/schedule?sportId=1";
-
+// Proxied version. Requests go to /api/* and vite.config.ts forwards them to
+// VITE_API_TARGET, so the browser never makes a cross-origin request.
+// To use this instead: in main.tsx, import App from "./App.axios.tsx".
 const App = () => {
     const [games, setGames] = useState<Game[]>([]);
     const [date, setDate] = useState("");
@@ -17,18 +18,22 @@ const App = () => {
 
         const load = async () => {
             try {
-                const response = await fetch(ENDPOINT);
-                // fetch does NOT throw on 4xx/5xx — you have to check yourself.
-                if (!response.ok) throw new Error(`HTTP ${response.status}`);
-
-                const data = (await response.json()) as ScheduleResponse;
+                // axios parses JSON and throws on 4xx/5xx for you.
+                const response = await api.get<ScheduleResponse>("/v1/schedule", {
+                    params: { sportId: 1 },
+                });
                 if (cancelled) return;
 
-                const day = data.dates[0];
+                const day = response.data.dates[0];
                 setGames(day?.games ?? []);
                 setDate(day?.date ?? "");
             } catch (caught) {
-                if (!cancelled) setError(caught instanceof Error ? caught.message : String(caught));
+                if (cancelled) return;
+                setError(
+                    axios.isAxiosError(caught)
+                        ? `${caught.message}${caught.response ? ` (HTTP ${caught.response.status})` : ""}`
+                        : String(caught)
+                );
             } finally {
                 if (!cancelled) setLoading(false);
             }
