@@ -1,0 +1,21 @@
+.badge {
+  display: inline-block;
+  padding: 0.25em 0.75em;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.onTime {
+  background-color: var(--color-on-time-bg);
+  color: var(--color-on-time-text);
+  border: 1px solid var(--color-on-time-border);
+}
+
+.delayed {
+  background-color: var(--color-delayed-bg);
+  color: var(--color-delayed-text);
+  border: 1px solid var(--color-delayed-border);
+}
